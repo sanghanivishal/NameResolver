@@ -26,7 +26,7 @@ exports.protect = async (req, res, next) => {
 
       // 2) Verify token
       const decode = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
+      console.log(decode)
       // 3) check if the user is exist (not deleted)
       const user = await User.findById(decode.id);
       if (!user) {
