@@ -26,7 +26,7 @@ exports.protect = async (req, res, next) => {
 
       // 2) Verify token
       const decode = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-      console.log(decode)
+
       // 3) check if the user is exist (not deleted)
       const user = await User.findById(decode.id);
       if (!user) {
@@ -60,7 +60,6 @@ exports.login = async (req, res, next) => {
          return next(new AppError(200, false, 'Email or Password is wrong'), req, res, next);
       }
 
-      console.log(user.id)
       const token = createToken(user.id);
 
       // Remove the password from the output
