@@ -60,6 +60,7 @@ exports.login = async (req, res, next) => {
          return next(new AppError(200, false, 'Email or Password is wrong'), req, res, next);
       }
 
+      console.log(user.id)
       const token = createToken(user.id);
 
       // Remove the password from the output
