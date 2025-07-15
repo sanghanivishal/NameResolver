@@ -49,6 +49,7 @@ async function refreshBearerToken() {
         const response = await request(config);
         if (response.data && response.data.access_token) {
             token_1 = response.data.access_token;
+            console.log("Token Success", token_1)
             refresh_token = response.data.refresh_token;
             return token_1;
         } else {
