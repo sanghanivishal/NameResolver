@@ -16,7 +16,7 @@ exports.request = async (config) => {
          // console.log('API TIME ' + (endTime - startTime) + 'ms')
          res(response)
       }).catch(function (error) {
-         // console.log("====",error.response)
+         console.log("====",error.response)
          rej(error?.response?.data || "Invalid phone number or data not found.")
       });
    })
