@@ -9,6 +9,7 @@ const moment = require('moment');
 const {Blob} = require('node:buffer');
 const ContactModel = require('../models/contactModel');
 const mongoose = require("mongoose");
+const Subscription = require('../models/subscriptionModel');
 
 let token_1 = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImE4ZGY2MmQzYTBhNDRlM2RmY2RjYWZjNmRhMTM4Mzc3NDU5ZjliMDEiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVmlzaGFsIFNhbmdoYW5pIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0pBRHBpMVNqb2xIWnBrUmNZZnNTRkVhcXVNTHRLWkx4SWF0Q0hBVWNRM3BwZUE5UT1zOTYtYyIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS92aWV3Y2FsbGVyLWQ5MjA0IiwiYXVkIjoidmlld2NhbGxlci1kOTIwNCIsImF1dGhfdGltZSI6MTc1MjQxNzk5MiwidXNlcl9pZCI6IkM4R3M0RktMTVloZ09xV0dtaHFGR1dwSG9rRzMiLCJzdWIiOiJDOEdzNEZLTE1ZaGdPcVdHbWhxRkdXcEhva0czIiwiaWF0IjoxNzUyNTY5OTMyLCJleHAiOjE3NTI1NzM1MzIsImVtYWlsIjoidmlzaHNhbmdoYW5pQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7Imdvb2dsZS5jb20iOlsiMTA3ODIyNzkxNzU2NDU1OTQ5OTQ5Il0sImVtYWlsIjpbInZpc2hzYW5naGFuaUBnbWFpbC5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJnb29nbGUuY29tIn19.gViHH-9hQQfmoXRdXemUOtfmtlfJGmXcqZM3DaczmWo10K8lwLDYaOkW20gGNWCphn-JAlfheIZp70Sax-gyY2hqAF1T3EQh5cTOL1RtRdUqaeFFmX5ePkyHs0oIkmcMYFZG1rVcPVGJJohH-_4JTmo506N8EfsSw2DjyKWn3SLfFWwy84uYCe4fsju9XYQZCErYfuynYbX2BEjq_SP2UiFTk3B8Gn-XoB3n68_BOy9Ku-wkwUIQvnxSeco-_-WpK_68DJrOAJpLQfA02UC4kNUqcMy8UPwEU8PFvnS3TVLba5skKXfGPyZ9-GBnGNmE7yDdwuP7IUhS-SJu8Q_iwQ"
 let refresh_token = "AMf-vBxnWAJplPcWdejHu8XeYhrig248Kwqbybade3E_Na6OuHg1yXXIxA3Ll3jucbCaFumzKZ6Z4xNv-xXwCMmmwX-H127YOzC7E03aFNt1dCw1vbteORnlEb6lAEO4nNnN5029PdgnJnr1HAz18Gzqzi8MaXHQkTO2QQWL3mKswpj0-wGBpCZr5eZepnzJoAFvbo0FJAw0OlpYRHfDdxdUloK5COCu5Ii53kA589iXSfHY8IYDYzXeOC9TAyjn2vopq71o-vHJLqXE-mT_EJcJFyBe-T-LUBJILFPyyImHVXtJp52gMcrU2rpANFO7WXH9sRRMmaS-_jSAtptTOyi83DAp-m6PGm5YwPZaAKi2TrzHda6qybKpUx4SA9ONPuYZjvg_K5_h1zrBccBOcCOCjVurLf9LpDSWKh-bKXWtC9LBX13X0TkWaOWrpLrD972K8i7SAq8c"; // Set this to your initial refresh token
@@ -267,6 +268,25 @@ function formatContactData(response) {
     return data
 }
 
+/**
+ * Middleware to count valid (HTTP 200) responses and increment in Subscription model
+ * Assumes req.user._id is available (user must be authenticated)
+ */
+function countValidResponseMiddleware(req, res, next) {
+    const originalSend = res.send;
+    res.send = async function (body) {
+        if (res.statusCode === 200 && req.user && req.user._id) {
+            try {
+                await Subscription.incrementCounts(req.user._id);
+            } catch (e) {
+                console.error('Failed to increment validCount:', e);
+            }
+        }
+        originalSend.apply(res, arguments);
+    };
+    next();
+}
+
 module.exports = {
     removeKey,
     replaceKey,
@@ -283,5 +303,6 @@ module.exports = {
     formatContactData,
     validateCountryCode,
     refreshBearerToken,
-    startAutoRefreshToken
+    startAutoRefreshToken,
+    countValidResponseMiddleware
 }

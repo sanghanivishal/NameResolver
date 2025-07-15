@@ -10,7 +10,7 @@ router.get('/login', authController.login);
 router.post('/signup', authController.signup);
 router.get('/test', authController.test);
 
-// router.use(authController.protect);
+router.use(authController.protect);
 
 router.get('/search', searchValidationRules(), validate, utils.validateCountryCode, baseController.search);
 router.get('/getCountryCode', baseController.getCountryCode);
